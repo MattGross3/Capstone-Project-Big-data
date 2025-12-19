@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  configsvr:
+    image: mongo:7.0
+    command: ["mongod", "--configsvr", "--replSet", "cfg", "--port", "27019"]
+    ports:
+      - "27019:27019"
+    volumes:
+      - mongo-config:/data/configdb
+  shard1:
+    image: mongo:7.0
+    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-01", "--port", "27018"]
+    ports:
+      - "27018:27018"
+    volumes:
+      - shard1:/data/db
+  shard2:
+    image: mongo:7.0
+    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-02", "--port", "27020"]
+    ports:
+      - "27020:27020"
+    volumes:
+      - shard2:/data/db
+  mongos:
+    image: mongo:7.0
+    depends_on:
+      - configsvr
+      - shard1
+      - shard2
+    ports:
+      - "27017:27017"
+    command: [
+      "mongos",
+      "--configdb", "cfg/configsvr:27019",
+      "--bind_ip_all",
+      "--port", "27017"
+    ]
+  bootstrap:
+    image: mongo:7.0
+    depends_on:
+      - mongos
+    volumes:
+      - ./docker/mongo/bootstrap.sh:/scripts/bootstrap.sh:ro
+    entrypoint: ["bash", "/scripts/bootstrap.sh"]
+
+volumes:
+  mongo-config:
+  shard1:
+  shard2:

@@ -1,0 +1,39 @@
+flowchart LR
+  subgraph Source
+    JAN[JAN_DATA.csv]
+    FEB[FEB_DATA.csv]
+  end
+
+  subgraph ETL[Python ETL Service]
+    INGEST[Ingest Pipeline<br/>pandas]
+    CLEAN[Clean & Validate<br/>pandas + Pydantic]
+    AGG[Aggregate<br/>pandas]
+  end
+
+  subgraph MongoDB[MongoDB Sharded Cluster]
+    RAW[(flights_raw)]
+    CLEANED[(flights_clean)]
+    AGG_CARRIER[(agg_carrier)]
+    AGG_ORIGIN[(agg_origin_cancel)]
+    AGG_ROUTE[(agg_route_delay)]
+  end
+
+  subgraph UI[Streamlit Dashboard]
+    VIEWS[Streamlit Dashboard<br/>Altair charts]
+  end
+
+  JAN --> INGEST
+  FEB --> INGEST
+
+  INGEST --> RAW
+  RAW --> CLEAN
+  CLEAN --> CLEANED
+  CLEANED --> AGG
+  AGG --> AGG_CARRIER
+  AGG --> AGG_ORIGIN
+  AGG --> AGG_ROUTE
+
+  VIEWS --> AGG_CARRIER
+  VIEWS --> AGG_ORIGIN
+  VIEWS --> AGG_ROUTE
+  VIEWS --> CLEANED
