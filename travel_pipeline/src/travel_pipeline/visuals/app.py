@@ -9,19 +9,33 @@ import altair as alt
 from travel_pipeline.core.config import get_settings
 from travel_pipeline.db.mongo import get_mongo_client
 
+# Load configuration once so all views share the same MongoDB settings.
 settings = get_settings()
 
+# Configure the overall Streamlit page (title + wide layout for charts).
 st.set_page_config(page_title="BTS Flight Reliability", layout="wide")
 
 
 @st.cache_resource(show_spinner=False)
 def get_client():
+    """Create a single MongoDB client and reuse it across reruns.
+
+    Streamlit caches this so we don't open a new connection for every
+    interaction (which would be slow and unnecessary).
+    """
+
     client = get_mongo_client(settings)
     return client
 
 
 @st.cache_data(ttl=60, show_spinner=False)
 def load_collection(collection_name: str) -> pd.DataFrame:
+    """Load a MongoDB collection into a pandas DataFrame.
+
+    Results are cached for 60 seconds to avoid hitting the database on
+    every widget interaction while still keeping the data reasonably fresh.
+    """
+
     client = get_client()
     database = client[settings.database]
     frame = pd.DataFrame(list(database[collection_name].find({}, {"_id": 0})))
@@ -29,6 +43,8 @@ def load_collection(collection_name: str) -> pd.DataFrame:
 
 
 def carrier_view():
+    """Show daily average departure and arrival delays by carrier."""
+
     st.subheader("Carrier Delay Trend (Daily)")
     frame = load_collection(settings.agg_carrier_collection)
     if frame.empty:
@@ -43,6 +59,8 @@ def carrier_view():
 
 
 def origin_view():
+    """Display cancellation rate by origin airport from gold aggregates."""
+
     st.subheader("Origin Cancellation Rate")
     frame = load_collection(settings.agg_origin_collection)
     if frame.empty:
@@ -53,6 +71,8 @@ def origin_view():
 
 
 def route_view():
+    """Tabular preview of route-level delay and volume metrics."""
+
     st.subheader("Route Delay Heatmap")
     frame = load_collection(settings.agg_route_collection)
     if frame.empty:
@@ -63,6 +83,8 @@ def route_view():
 
 
 def on_time_scorecard_view():
+    """High-level KPIs summarizing fleet on-time performance."""
+
     st.subheader("On-Time Performance Scorecard")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
@@ -85,6 +107,8 @@ def on_time_scorecard_view():
 
 
 def delay_waterfall_view():
+    """Break down average delay for one airline into key components."""
+
     st.subheader("Delay Waterfall (Schedule vs Actual)")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
@@ -117,6 +141,8 @@ def delay_waterfall_view():
 
 
 def route_risk_matrix_view():
+    """Bubble chart of route-level delay and cancellation risk for one carrier."""
+
     st.subheader("Route Profitability Risk Matrix")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
@@ -157,6 +183,8 @@ def route_risk_matrix_view():
 
 
 def airport_congestion_heatmap_view():
+    """Heatmap showing average delay by day-of-week and hour for a station."""
+
     st.subheader("Airport Congestion Heatmap (Hour × Day-of-week)")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
@@ -200,6 +228,8 @@ def airport_congestion_heatmap_view():
 
 
 def missed_connection_risk_view():
+    """Trend of share of flights arriving 30/45/60+ minutes late into a hub."""
+
     st.subheader("Missed Connection Risk Proxy")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
@@ -227,6 +257,8 @@ def missed_connection_risk_view():
 
 
 def airline_benchmark_view():
+    """League table comparing on-time performance across carriers."""
+
     st.subheader("Airline Benchmarking League Table")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
@@ -245,6 +277,8 @@ def airline_benchmark_view():
 
 
 def control_chart_view():
+    """Control chart for average delay over time for a route or airport."""
+
     st.subheader("Control Chart for Route or Airport")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
@@ -280,6 +314,8 @@ def control_chart_view():
 
 
 def pareto_delay_view():
+    """Pareto chart showing which dimensions contribute most delay minutes."""
+
     st.subheader("Pareto of Delay Contributors")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
@@ -306,6 +342,8 @@ def pareto_delay_view():
 
 
 def disruption_map_view():
+    """Rank origins by average delay and cancellation to highlight hotspots."""
+
     st.subheader("Disruption Map (Tabular Proxy)")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
@@ -325,6 +363,8 @@ def disruption_map_view():
 
 
 def daily_volume_view():
+    """Plot total number of flights per day across all carriers."""
+
     st.subheader("Daily Flight Volume (All Carriers)")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
@@ -341,6 +381,8 @@ def daily_volume_view():
 
 
 def top_delayed_routes_view():
+    """Bar chart of the N routes with the highest average arrival delay."""
+
     st.subheader("Top N Most Delayed Routes")
     frame = load_collection(settings.agg_route_collection)
     if frame.empty:
@@ -354,6 +396,8 @@ def top_delayed_routes_view():
 
 
 def dow_cancellation_view():
+    """Show how cancellation rate changes across the days of the week."""
+
     st.subheader("Cancellation Rate by Day of Week")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
@@ -383,6 +427,8 @@ def dow_cancellation_view():
 
 
 def dep_delay_distribution_view():
+    """Histogram-style view of the overall departure delay distribution."""
+
     st.subheader("Distribution of Departure Delays")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
@@ -401,6 +447,8 @@ def dep_delay_distribution_view():
 
 
 def ontime_by_month_view():
+    """Daily on-time rate for a selected carrier across the time range."""
+
     st.subheader("Daily On-Time Performance by Carrier")
     frame = load_collection(settings.clean_collection)
     if frame.empty:
