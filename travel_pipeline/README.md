@@ -33,14 +33,6 @@ Distributed data engineering project that ingests BTS Reporting Carrier On-Time 
 - `uv run mypy .` enforces typing discipline across the `src/` tree.
 - Logging is configured through `travel_pipeline.core.logging.configure_logging` and emits structured events per stage.
 
-## Video & Presentation Checklist
-
-1. Architecture walkthrough (docker-compose topology + mermaid diagram).
-2. Raw ingestion demo showing file counts and MongoDB schema metadata.
-3. Cleaning steps: missing value handling, text normalization, deduplication, Pydantic validation.
-4. Aggregations plus indexing/sharding discussion.
-5. Streamlit dashboard tour (three visuals) sourced from MongoDB gold collections.
-6. Reflection on lessons learned and how views on Big Data evolved.
 
 ## Repository Contents
 
