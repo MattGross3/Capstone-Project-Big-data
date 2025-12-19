@@ -41,8 +41,4 @@ Distributed data engineering project that ingests BTS Reporting Carrier On-Time 
 - `tests/`: pytest suites.
 - `.env.example`, `mypy.ini`, `pytest.ini`, and UV-managed `pyproject.toml` for reproducibility.
 
-## Next Steps
 
-- Extend aggregations with route-level seasonal insights.
-- Deploy Streamlit to Streamlit Community Cloud or Azure App Service.
-- Add CI (GitHub Actions) to run `uv sync`, tests, mypy, and linting on every push.
